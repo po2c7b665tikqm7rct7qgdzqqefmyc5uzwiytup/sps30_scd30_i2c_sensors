@@ -1,3 +1,4 @@
+from scd30_i2c import SCD30
 import time
 scd30 = SCD30()
 
