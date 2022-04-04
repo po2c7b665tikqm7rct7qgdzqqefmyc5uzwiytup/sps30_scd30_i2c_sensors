@@ -1,0 +1,47 @@
+import sps.sps30 as ss
+from scd30_i2c import SCD30
+import time
+
+
+#scd30
+scd30 = SCD30()
+scd30.start_periodic_measurement()
+
+#sps30
+sps = ss.SPS30(1)
+sps.set_auto_cleaning_interval(7200)
+sps.start_fan_cleaning()
+time.sleep(13)
+sps.start_measurement()
+
+
+i = 0
+while i < 6000:
+    #sps30
+    if scd30.get_data_ready():
+        m = scd30.read_measurement()
+        if m is not None:
+            print(f"CO2:{m[0]:.2f}ppm, temp: {m[1]:.2f}'C, rh: {m[2]:.2f}%")
+        time.sleep(2)
+    else:
+        time.sleep(0.2)
+
+    if sps.read_measured_values() == sps.MEASURED_VALUES_ERROR:
+            raise Exception("MEASURED VALUES CRC ERROR!")
+    else:
+        mm = sps.dict_values
+        print ("PM1.0 in µg/m3: " + str(round(mm["pm1p0"],3)))
+        print ("PM2.5 in µg/m3: " + str(round(mm['pm2p5'],3)))
+        print ("PM4.0 in µg/m3: " + str(round(mm['pm4p0'],3)))
+        print ("PM10.0 in µg/m3: " + str(round(mm['pm10p0'],3)))
+        print ("NC0.5 in 1/cm3: " + str(round(mm['nc0p5'],3)))    # NC: Number of Concentration
+        print ("NC1.0 in 1/cm3: " + str(round(mm['nc1p0'],3)))
+        print ("NC2.5 in 1/cm3: " + str(round(mm['nc2p5'],3)))
+        print ("NC4.0 in 1/cm3: " + str(round(mm['nc4p0'],3)))
+        print ("NC10.0 in 1/cm3: " + str(round(mm['nc10p0'],3)))
+        print ("Typical Particle Size in µm: " + str(round(mm['typical'],3)))
+        i += 1
+        print()
+        time.sleep(6)
+
+sps.stop_measurement()
